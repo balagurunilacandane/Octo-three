@@ -6,6 +6,7 @@ import type { AccessoryType, Agent } from '../domain/types'
 import { useWorld } from '../state/worldStore'
 import { getPlanner } from '../tasks/TaskSystem'
 import { formatTokens } from '../ui/hooks'
+import { ConfirmButton } from '../components/ConfirmButton'
 
 const ACCESSORIES: AccessoryType[] = ['none', 'antenna', 'headset', 'backpack', 'badge', 'cap']
 
@@ -243,9 +244,9 @@ function AgentEditor({ worldId, agent, onClose }: { worldId: string; agent: Agen
         )}
 
         <div className="wizard-actions">
-          <button className="btn danger ghost" onClick={() => confirm(`Remove ${agent.name}?`) && (removeAgent(worldId, agent.id), onClose())}>
+          <ConfirmButton className="btn danger ghost" onConfirm={() => (removeAgent(worldId, agent.id), onClose())}>
             Remove
-          </button>
+          </ConfirmButton>
           <span className="grow" />
           <button
             className="btn ghost"

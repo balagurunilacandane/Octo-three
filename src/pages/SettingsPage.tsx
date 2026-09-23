@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { ConnectionStatus } from '../events/realtime'
 import { useWorld } from '../state/worldStore'
 import { getPlanner } from '../tasks/TaskSystem'
+import { ConfirmButton } from '../components/ConfirmButton'
 
 export function SettingsPage({ worldId, connection }: { worldId: string; connection: ConnectionStatus }) {
   const b = useWorld((s) => s.bundles[worldId])
@@ -128,9 +129,7 @@ export function SettingsPage({ worldId, connection }: { worldId: string; connect
 
       <section className="card danger-zone">
         <div className="card-title">Danger zone</div>
-        <button className="btn danger" onClick={() => confirm(`Delete “${b.world.name}”? This cannot be undone.`) && deleteWorld(worldId)}>
-          Delete this World
-        </button>
+        <ConfirmButton onConfirm={() => deleteWorld(worldId)}>Delete this World</ConfirmButton>
       </section>
     </div>
   )

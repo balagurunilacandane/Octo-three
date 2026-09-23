@@ -2,7 +2,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Physics } from '@react-three/rapier'
 import { Bloom, EffectComposer, TiltShift2, ToneMapping, Vignette } from '@react-three/postprocessing'
 import { ToneMappingMode } from 'postprocessing'
-import { Suspense, useEffect, useMemo, useRef, useState, type RefObject } from 'react'
+import { Component, Suspense, useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react'
 import * as THREE from 'three'
 import { AgentBody, AgentInstances } from '../agents/Agent'
 import { useCharacterController } from '../agents/AgentPhysics'
@@ -38,6 +38,20 @@ function SimulationLoop({ ctx }: { ctx: RuntimeContextValue }) {
     }
   }, -1)
   return null
+}
+
+/** If physics (WebAssembly) can't start, agents still walk the nav paths — just without collision. */
+class SoftFail extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false }
+  static getDerivedStateFromError() {
+    return { failed: true }
+  }
+  componentDidCatch(err: unknown) {
+    console.warn('[physics] disabled:', err)
+  }
+  render() {
+    return this.state.failed ? null : this.props.children
+  }
 }
 
 /** Nudges department cards so they never hang off the edge of the scene. */
@@ -239,12 +253,14 @@ function WorldInstance({ worldId, active, onConnection }: AIWorldProps) {
         <DebugHook runtime={runtime} />
         <WorldCamera />
         <Lights layout={layout} quality={quality} />
+        <SoftFail>
         <Suspense fallback={null}>
           <Physics timeStep="vary" gravity={[0, 0, 0]} paused={!active}>
             <WorldColliders layout={layout} />
             <AgentBodies runtime={runtime} />
           </Physics>
         </Suspense>
+        </SoftFail>
         <AgentsVisual runtime={runtime} />
         <WorldPlatform layout={layout} particles={quality.particles} />
         <Brain particles={quality.particles} />

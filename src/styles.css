@@ -1,5 +1,6 @@
 /* AI Worlds — quiet dark theme: charcoal surfaces, bone text, muted accents. */
 :root {
+  color-scheme: dark;
   --bg: #121212;
   --bg-2: #171718;
   --panel: rgba(24, 24, 26, 0.94);

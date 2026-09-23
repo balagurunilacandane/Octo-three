@@ -4,6 +4,7 @@ import type { ProposedTeam } from '../domain/planner'
 import { useWorld } from '../state/worldStore'
 import { getPlanner } from '../tasks/TaskSystem'
 import { ColorInput } from '../components/ColorInput'
+import { ConfirmButton } from '../components/ConfirmButton'
 
 const BUILDINGS: { key: BuildingType; label: string }[] = [
   { key: 'research', label: 'Laboratory' },
@@ -67,9 +68,9 @@ export function TeamsPage({ worldId }: { worldId: string }) {
               >
                 Show in world
               </button>
-              <button className="btn small danger" disabled={teams.length <= 1} onClick={() => confirm(`Remove ${t.name} and its agents?`) && removeTeam(worldId, t.id)}>
+              <ConfirmButton className="btn small danger" disabled={teams.length <= 1} onConfirm={() => removeTeam(worldId, t.id)}>
                 Remove
-              </button>
+              </ConfirmButton>
             </div>
           </div>
         ))}

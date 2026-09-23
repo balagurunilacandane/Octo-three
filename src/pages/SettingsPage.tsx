@@ -49,6 +49,17 @@ export function SettingsPage({ worldId, connection }: { worldId: string; connect
             <span>Description</span>
             <input className="input" value={b.world.description ?? ''} onChange={(e) => updateWorld(worldId, { description: e.target.value })} />
           </label>
+          <div className="field span2">
+            <span>Scene style</span>
+            <div className="seg">
+              <button className={(b.world.theme ?? 'office') === 'office' ? 'on' : ''} onClick={() => updateWorld(worldId, { theme: 'office' })}>
+                Office — desks & stat cards
+              </button>
+              <button className={b.world.theme === 'campus' ? 'on' : ''} onClick={() => updateWorld(worldId, { theme: 'campus' })}>
+                Campus — a building per team
+              </button>
+            </div>
+          </div>
           <label className="field span2">
             <span>How proactive should your teams be?</span>
             <input type="range" min={0} max={1} step={0.05} value={b.runtime.autonomy} onChange={(e) => updateRuntime(worldId, { autonomy: Number(e.target.value) })} />

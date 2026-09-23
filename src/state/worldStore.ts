@@ -10,6 +10,7 @@ import type { WorldEvent } from '../events/types'
 export type Tab = 'overview' | 'world' | 'teams' | 'agents' | 'tasks' | 'knowledge' | 'tools' | 'activity' | 'settings'
 export type View = 'home' | 'wizard' | 'world'
 export type Selection = { kind: 'agent' | 'team' | 'brain'; id: string } | null
+export type TaskFilter = 'all' | 'backlog' | 'in_progress' | 'waiting' | 'completed' | 'failed'
 
 const MAX_TASKS = 200
 const MAX_KNOWLEDGE = 160
@@ -29,6 +30,8 @@ export interface WorldState {
   activity: Record<string, ActivityEntry[]>
   /** Bumped to ask the camera to re-focus the current selection. */
   focusNonce: number
+  taskFilter: TaskFilter
+  setTaskFilter: (f: TaskFilter) => void
 
   // navigation
   setView: (v: View) => void
@@ -113,6 +116,8 @@ export const useWorld = create<WorldState>()(
       hover: null,
       activity: {},
       focusNonce: 0,
+      taskFilter: 'all',
+      setTaskFilter: (taskFilter) => set(() => ({ taskFilter })),
 
       setView: (view) => set(() => ({ view, selection: null, hover: null })),
       setTab: (tab) => set(() => ({ tab })),
@@ -279,6 +284,12 @@ export const useWorld = create<WorldState>()(
           case 'task.completed': {
             updateTask(e.taskId, { status: 'completed', result: e.result, tokens: e.tokens })
             if (task) {
+              // Department counters grow with completed work (they start at 0 — nothing is invented).
+              const team = task.targetDepartment
+              patchBundle(set, worldId, (bb) => {
+                const cur = bb.metrics?.[team] ?? [0, 0]
+                return { ...bb, metrics: { ...bb.metrics, [team]: [cur[0] + 1, cur[1] + 1 + ((e.tokens ?? 0) % 3)] } }
+              })
               const ag = b.agents[task.assignedAgent]
               if (ag)
                 get().updateAgent(worldId, ag.id, { tokensUsed: ag.tokensUsed + (e.tokens ?? 0), tasksCompleted: ag.tasksCompleted + 1 })

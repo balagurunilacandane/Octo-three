@@ -44,25 +44,44 @@ export const glass = new THREE.MeshPhysicalMaterial({
 })
 
 export const PALETTE = {
-  background: '#0a0f2c',
-  platformTop: '#e0409a',
-  platformTopAlt: '#d23a8f',
-  platformSide: '#3b1257',
-  platformDeep: '#1d0b36',
-  plot: '#f0a6d0',
-  plotSide: '#8f2a74',
-  path: '#ff7ac8',
-  dark: '#1e1b4b',
-  darker: '#12103a',
-  white: '#f8fafc',
-  offWhite: '#e2e8f0',
-  wood: '#fbcfe8',
-  desk: '#f5f3ff',
-  metal: '#94a3b8',
-  plant: '#34d399',
-  plantDark: '#059669',
-  pot: '#f472b6',
-  head: '#1e1b3a',
+  background: '#121212',
+  platformTop: '#1d1d1f',
+  platformTopAlt: '#232325',
+  platformSide: '#141415',
+  platformDeep: '#0d0d0e',
+  lane: '#151516',
+  plot: '#2a2a2d',
+  plotSide: '#18181a',
+  path: '#2e2e31',
+  dark: '#1b1b1d',
+  darker: '#111112',
+  white: '#e7e5e1',
+  offWhite: '#c9c7c2',
+  wood: '#8a8278',
+  desk: '#d9d6d0',
+  deskLeg: '#3a3a3d',
+  metal: '#6b6b70',
+  plant: '#2f5a45',
+  plantDark: '#244636',
+  pot: '#3c3c40',
+  head: '#161618',
+  body: '#2b2b2e',
+}
+
+/** Quiet, desaturated version of a team colour for large surfaces (plots). */
+export function mutedSurface(color: string): string {
+  const c = new THREE.Color(color)
+  const hsl = { h: 0, s: 0, l: 0 }
+  c.getHSL(hsl)
+  return '#' + c.setHSL(hsl.h, Math.min(hsl.s, 0.9) * 0.26, 0.145).getHexString()
+}
+
+/** Soft accent version of a team colour for dots, lines and small highlights. */
+export function mutedAccent(color: string): string {
+  const c = new THREE.Color(color)
+  const hsl = { h: 0, s: 0, l: 0 }
+  c.getHSL(hsl)
+  return '#' + c.setHSL(hsl.h, Math.min(hsl.s, 0.9) * 0.55, 0.66).getHexString()
 }
 
 // geometries

@@ -21,38 +21,35 @@ varying vec2 vUv;
 
 float hash(float n) { return fract(sin(n) * 43758.5453123); }
 
+// Quiet, paper-white monitors: dark-grey content with a touch of the team colour.
 void main() {
   vec2 uv = vUv;
-  float t = uTime * (0.6 + uActivity * 2.4);
-  vec3 bg = mix(vec3(0.03, 0.04, 0.12), uColor * 0.18, 0.5);
+  float t = uTime * (0.4 + uActivity * 1.6);
+  vec3 bg = vec3(0.80, 0.81, 0.82);
+  vec3 ink = vec3(0.30, 0.31, 0.34);
+  vec3 accent = mix(ink, uColor, 0.55);
   vec3 col = bg;
 
   if (uMode < 0.5) {
-    // bar chart
-    float cols = 7.0;
+    float cols = 6.0;
     float id = floor(uv.x * cols);
-    float h = 0.25 + 0.6 * (0.5 + 0.5 * sin(t * (0.8 + hash(id) * 1.6) + id * 1.7));
-    float bar = step(uv.y, h * 0.8 + 0.08) * step(0.12, fract(uv.x * cols)) * step(fract(uv.x * cols), 0.82) * step(0.08, uv.y);
-    col = mix(col, uColor * 1.3, bar);
+    float h = 0.25 + 0.5 * (0.5 + 0.5 * sin(t * (0.6 + hash(id) * 1.2) + id * 1.7));
+    float bar = step(uv.y, h * 0.8 + 0.1) * step(0.18, fract(uv.x * cols)) * step(fract(uv.x * cols), 0.78) * step(0.1, uv.y);
+    col = mix(col, id < 1.0 ? accent : ink, bar * 0.85);
   } else if (uMode < 1.5) {
-    // scrolling text lines
-    float row = floor((uv.y + t * 0.08) * 9.0);
-    float len = 0.3 + 0.6 * hash(row + floor(t * 0.3));
-    float line = step(0.35, fract((uv.y + t * 0.08) * 9.0)) * step(fract((uv.y + t * 0.08) * 9.0), 0.7) * step(uv.x, len) * step(0.08, uv.x);
-    col = mix(col, uColor * 1.15, line * 0.9);
+    float y = uv.y + t * 0.05;
+    float row = floor(y * 8.0);
+    float len = 0.3 + 0.55 * hash(row + floor(t * 0.25));
+    float line = step(0.4, fract(y * 8.0)) * step(fract(y * 8.0), 0.68) * step(uv.x, len) * step(0.1, uv.x);
+    col = mix(col, hash(row) > 0.8 ? accent : ink, line * 0.7);
   } else {
-    // waveform / line graph
-    float y = 0.5 + 0.28 * sin(uv.x * 12.0 + t * 2.0) * sin(uv.x * 3.0 - t * 0.7);
-    float d = abs(uv.y - y);
-    col += uColor * smoothstep(0.05, 0.0, d) * 1.4;
-    col += uColor * 0.25 * step(fract(uv.x * 10.0), 0.03);
+    float y = 0.5 + 0.25 * sin(uv.x * 10.0 + t * 1.6) * sin(uv.x * 3.0 - t * 0.5);
+    col = mix(col, accent, smoothstep(0.045, 0.0, abs(uv.y - y)) * 0.9);
   }
 
-  // scanline + frame glow
-  col *= 0.88 + 0.12 * sin(uv.y * 160.0 + uTime * 4.0);
   float edge = min(min(uv.x, 1.0 - uv.x), min(uv.y, 1.0 - uv.y));
-  col += uColor * smoothstep(0.05, 0.0, edge) * 0.9;
-  col *= 0.75 + uActivity * 0.7;
+  col = mix(vec3(0.55), col, smoothstep(0.0, 0.04, edge));
+  col *= 0.86 + uActivity * 0.16;
   gl_FragColor = vec4(col, 1.0);
 }
 `

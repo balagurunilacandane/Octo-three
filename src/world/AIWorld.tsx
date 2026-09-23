@@ -2,7 +2,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Physics } from '@react-three/rapier'
 import { Bloom, EffectComposer, TiltShift2, ToneMapping, Vignette } from '@react-three/postprocessing'
 import { ToneMappingMode } from 'postprocessing'
-import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, useEffect, useMemo, useRef, useState, type RefObject } from 'react'
 import * as THREE from 'three'
 import { AgentBody, AgentInstances } from '../agents/Agent'
 import { useCharacterController } from '../agents/AgentPhysics'
@@ -18,7 +18,7 @@ import { Brain } from './Brain'
 import { DataPaths } from './DataPath'
 import { Department } from './Department'
 import { generateLayout, layoutKey, type WorldLayout } from './layout'
-import { animatedNeon, windUniform } from './materials'
+import { animatedNeon, mutedAccent, PALETTE, windUniform } from './materials'
 import { detectQuality, type QualitySettings } from './quality'
 import { RuntimeContext, type RuntimeContextValue, type TeamVisuals } from './RuntimeContext'
 import { WorldColliders, WorldPlatform } from './WorldPlatform'
@@ -34,10 +34,42 @@ function SimulationLoop({ ctx }: { ctx: RuntimeContextValue }) {
         s.uniforms.uTime.value += dt
         s.uniforms.uActivity.value = act
       }
-      v.glow.emissiveIntensity = 0.5 + act * 2.6
+      v.glow.emissiveIntensity = 0.25 + act * 0.9
     }
   }, -1)
   return null
+}
+
+/** Nudges department cards so they never hang off the edge of the scene. */
+function useKeepCardsInView(layer: RefObject<HTMLDivElement | null>) {
+  useEffect(() => {
+    const id = setInterval(() => {
+      const root = layer.current
+      if (!root) return
+      const box = root.getBoundingClientRect()
+      const m = 10
+      root.querySelectorAll<HTMLElement>('.card-anchor').forEach((el) => {
+        const r = el.getBoundingClientRect()
+        const dx = Number(el.dataset.dx ?? 0)
+        const dy = Number(el.dataset.dy ?? 0)
+        const left = r.left - dx
+        const top = r.top - dy
+        // shift needed to fit: positive when overflowing the left/top edge, negative for right/bottom
+        const cx = Math.min(Math.max(0, box.left + m - left), box.right - m - (left + r.width))
+        const cy = Math.min(Math.max(0, box.top + m - top), box.bottom - m - (top + r.height))
+        // Far off-screen (zoomed in on another area): hide instead of piling cards up at the edge.
+        const away = Math.abs(cx) > r.width * 0.95 || Math.abs(cy) > r.height * 0.95
+        if (el.classList.contains('offscreen') !== away) el.classList.toggle('offscreen', away)
+        if (Math.abs(cx - dx) > 0.5 || Math.abs(cy - dy) > 0.5) {
+          el.dataset.dx = String(cx)
+          el.dataset.dy = String(cy)
+          el.style.setProperty('--dx', `${cx}px`)
+          el.style.setProperty('--dy', `${cy}px`)
+        }
+      })
+    }, 120)
+    return () => clearInterval(id)
+  }, [layer])
 }
 
 /** `?debug` exposes renderer stats + runtime on window.__aiworld for profiling. */
@@ -86,7 +118,7 @@ function AgentsVisual({ runtime }: { runtime: WorldRuntime }) {
 function Lights({ layout, quality }: { layout: WorldLayout; quality: QualitySettings }) {
   const h = layout.half
   const light = useMemo(() => {
-    const l = new THREE.DirectionalLight('#fff4f8', 2.2)
+    const l = new THREE.DirectionalLight('#fffaf2', 1.9)
     l.position.set(h * 0.7, h * 1.6, h * 0.45)
     l.castShadow = quality.shadows
     l.shadow.mapSize.set(quality.shadowMapSize, quality.shadowMapSize)
@@ -102,18 +134,11 @@ function Lights({ layout, quality }: { layout: WorldLayout; quality: QualitySett
   }, [h, quality])
   return (
     <>
-      <ambientLight intensity={0.8} color="#c7b8ff" />
-      <hemisphereLight args={['#a5d8ff', '#6d1a5a', 0.9]} />
+      <ambientLight intensity={0.55} color="#ffffff" />
+      <hemisphereLight args={['#d9dde6', '#1a1a1c', 0.7]} />
       <primitive object={light} />
       <primitive object={light.target} />
-      <directionalLight position={[-h, h * 0.8, -h * 0.3]} intensity={0.6} color="#8ab4ff" />
-      {quality.tier !== 'low' &&
-        [
-          [h, h, '#22d3ee'],
-          [-h, h, '#f472b6'],
-          [h, -h, '#c084fc'],
-          [-h, -h, '#22d3ee'],
-        ].map(([x, z, c], i) => <pointLight key={i} position={[x as number, 1.5, z as number]} color={c as string} intensity={8} distance={14} decay={1.5} />)}
+      <directionalLight position={[-h, h * 0.8, -h * 0.3]} intensity={0.35} color="#cfd6e6" />
     </>
   )
 }
@@ -121,10 +146,10 @@ function Lights({ layout, quality }: { layout: WorldLayout; quality: QualitySett
 function Post({ quality }: { quality: QualitySettings }) {
   return (
     <EffectComposer multisampling={quality.tier === 'high' ? 4 : 0}>
-      <Bloom mipmapBlur intensity={0.75} luminanceThreshold={0.95} luminanceSmoothing={0.2} radius={0.7} />
-      {quality.tier === 'high' ? <TiltShift2 blur={0.06} taper={0.6} /> : <></>}
+      <Bloom mipmapBlur intensity={0.35} luminanceThreshold={1.1} luminanceSmoothing={0.3} radius={0.6} />
+      {quality.tier === 'high' ? <TiltShift2 blur={0.04} taper={0.65} /> : <></>}
       <ToneMapping mode={ToneMappingMode.NEUTRAL} />
-      <Vignette eskil={false} offset={0.3} darkness={0.45} />
+      <Vignette eskil={false} offset={0.35} darkness={0.5} />
     </EffectComposer>
   )
 }
@@ -155,10 +180,14 @@ function WorldInstance({ worldId, active, onConnection }: AIWorldProps) {
   const [runtime] = useState(() => new WorldRuntime(layout, bundle, quality.maxAgentsPerTeam))
   const teamVisuals = useMemo(() => {
     const out: Record<string, TeamVisuals> = {}
-    for (const p of layout.plots) out[p.teamId] = { screens: [0, 1, 2].map((m) => createScreenMaterial(p.color, m)), glow: animatedNeon(p.color, 1) }
+    for (const p of layout.plots) {
+      const accent = mutedAccent(p.color)
+      out[p.teamId] = { screens: [0, 1, 2].map((m) => createScreenMaterial(accent, m)), glow: animatedNeon(accent, 0.4) }
+    }
     return out
   }, [layout])
   const labelLayer = useRef<HTMLDivElement>(null)
+  useKeepCardsInView(labelLayer)
   const ctx = useMemo<RuntimeContextValue>(() => ({ runtime, teamVisuals, labelLayer }), [runtime, teamVisuals])
   const eventSource = useWorld((s) => s.bundles[worldId]?.runtime.eventSource ?? 'simulated')
   const endpoint = useWorld((s) => s.bundles[worldId]?.runtime.endpoint ?? '')
@@ -204,8 +233,7 @@ function WorldInstance({ worldId, active, onConnection }: AIWorldProps) {
       gl={{ antialias: quality.tier !== 'high', powerPreference: 'high-performance' }}
       style={{ touchAction: 'none' }}
     >
-      <color attach="background" args={['#0a0f2c']} />
-      <fog attach="fog" args={['#0a0f2c', 120, 260]} />
+      <color attach="background" args={[PALETTE.background]} />
       <RuntimeContext.Provider value={ctx}>
         <SimulationLoop ctx={ctx} />
         <DebugHook runtime={runtime} />
@@ -221,7 +249,7 @@ function WorldInstance({ worldId, active, onConnection }: AIWorldProps) {
         <WorldPlatform layout={layout} particles={quality.particles} />
         <Brain particles={quality.particles} />
         {layout.plots.map((p) => (
-          <Department key={p.teamId} plot={p} lights={quality.tier !== 'low'} />
+          <Department key={p.teamId} plot={p} lights={quality.tier !== 'low'} style={layout.style} />
         ))}
         <DataPaths density={Math.max(0.5, quality.particles)} />
         <TaskParticles />

@@ -45,7 +45,7 @@ export function WorldPlatform({ layout, particles = 1 }: { layout: WorldLayout; 
   }, [layout.half])
 
   useFrame(({ clock }) => {
-    if (edgeMat.current) edgeMat.current.color.setHSL(0.52 + Math.sin(clock.elapsedTime * 0.3) * 0.04, 1, 0.62)
+    if (edgeMat.current) edgeMat.current.opacity = 0.35 + Math.sin(clock.elapsedTime * 0.6) * 0.1
   })
 
   return (
@@ -62,29 +62,29 @@ export function WorldPlatform({ layout, particles = 1 }: { layout: WorldLayout; 
           if (e.delta < 6) select(null) // ignore clicks that end a camera drag
         }}
       >
-        <meshStandardMaterial color={PALETTE.platformTop} roughness={0.75} metalness={0.05} />
+        <meshStandardMaterial color={PALETTE.platformTop} roughness={0.9} metalness={0.02} />
       </RoundedBox>
       <lineSegments geometry={grid} position={[0, 0.005, 0]}>
-        <lineBasicMaterial color="#ff9fd6" transparent opacity={0.18} depthWrite={false} />
+        <lineBasicMaterial color="#ffffff" transparent opacity={0.035} depthWrite={false} />
       </lineSegments>
       {/* side walls */}
       <RoundedBox args={[size - 0.3, 2.4, size - 0.3]} radius={0.35} smoothness={3} position={[0, -1.7, 0]}>
         <meshStandardMaterial color={PALETTE.platformSide} roughness={0.6} metalness={0.2} />
       </RoundedBox>
       <RoundedBox args={[size - 0.2, 0.12, size - 0.2]} radius={0.05} position={[0, -0.95, 0]}>
-        <meshStandardMaterial color="#ff4fb3" emissive="#ff4fb3" emissiveIntensity={1.4} toneMapped={false} />
+        <meshStandardMaterial color="#26262a" roughness={0.6} />
       </RoundedBox>
       {/* neon top edge */}
       <lineLoop geometry={edge} position={[0, 0.02, 0]}>
-        <lineBasicMaterial ref={edgeMat} color="#22d3ee" toneMapped={false} />
+        <lineBasicMaterial ref={edgeMat} color="#8a8a92" transparent opacity={0.4} />
       </lineLoop>
       {/* underside rock */}
       <mesh position={[0, -2.9 - size * 0.18, 0]} rotation={[Math.PI, Math.PI / 4, 0]}>
         <coneGeometry args={[size * 0.62, size * 0.42, 4, 1]} />
         <meshStandardMaterial color={PALETTE.platformDeep} roughness={0.9} flatShading />
       </mesh>
-      <Sparkles count={Math.round(120 * particles)} scale={[size * 1.1, 8, size * 1.1]} position={[0, -5, 0]} size={16} speed={0.3} color="#f0abfc" opacity={0.7} />
-      <Sparkles count={Math.round(80 * particles)} scale={[size * 1.2, 6, size * 1.2]} position={[0, 3, 0]} size={8} speed={0.2} color="#a5f3fc" opacity={0.5} />
+      <Sparkles count={Math.round(70 * particles)} scale={[size * 1.1, 8, size * 1.1]} position={[0, -5, 0]} size={8} speed={0.25} color="#cfcfd6" opacity={0.25} />
+      <Sparkles count={Math.round(40 * particles)} scale={[size * 1.2, 6, size * 1.2]} position={[0, 3, 0]} size={5} speed={0.15} color="#e5e5ea" opacity={0.2} />
     </group>
   )
 }

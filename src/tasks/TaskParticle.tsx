@@ -35,19 +35,19 @@ export function TaskParticles() {
         tr.curve.getPointAt(Math.min(1, k), p)
         const fade = 1 - i / TRAIL
         dummy.position.copy(p)
-        dummy.scale.setScalar((i === 0 ? 0.16 * pulse : 0.11 * fade) + 0.01)
+        dummy.scale.setScalar((i === 0 ? 0.12 * pulse : 0.07 * fade) + 0.01)
         dummy.updateMatrix()
         m.setMatrixAt(n, dummy.matrix)
-        col.copy(tr.color).multiplyScalar(i === 0 ? 3.2 : 1.2 + fade * 1.5)
+        col.copy(tr.color).multiplyScalar(i === 0 ? 1.3 : 0.5 + fade * 0.6)
         m.setColorAt(n, col)
         n++
       }
       tr.curve.getPointAt(Math.min(1, tr.t), p)
       dummy.position.copy(p)
-      dummy.scale.setScalar(0.34 * pulse)
+      dummy.scale.setScalar(0.24 * pulse)
       dummy.updateMatrix()
       h.setMatrixAt(hn, dummy.matrix)
-      h.setColorAt(hn, col.copy(tr.color).multiplyScalar(0.6))
+      h.setColorAt(hn, col.copy(tr.color).multiplyScalar(0.35))
       hn++
     }
     m.count = n

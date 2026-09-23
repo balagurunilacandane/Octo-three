@@ -38,19 +38,19 @@ export function createPose(): AgentPose {
 }
 
 export const STATE_COLORS: Record<AgentState, string> = {
-  idle: '#94a3b8',
-  working: '#22d3ee',
-  thinking: '#c084fc',
-  walking: '#e2e8f0',
-  researching: '#38bdf8',
-  communicating: '#fde047',
-  waiting: '#fbbf24',
-  completed: '#a3e635',
-  error: '#f87171',
+  idle: '#8a8f98',
+  working: '#8fd3c8',
+  thinking: '#b8aee6',
+  walking: '#d5d5d8',
+  researching: '#93bfe3',
+  communicating: '#e6cf8f',
+  waiting: '#e2b567',
+  completed: '#c6d68a',
+  error: '#e08a80',
 }
 const STATE_COLOR_OBJ = Object.fromEntries(Object.entries(STATE_COLORS).map(([k, v]) => [k, new THREE.Color(v)])) as Record<AgentState, THREE.Color>
-const RED = new THREE.Color('#ff3b3b')
-const LIME = new THREE.Color('#a3e635')
+const RED = new THREE.Color('#e0655a')
+const LIME = new THREE.Color('#c6d68a')
 
 export function animateAgent(p: AgentPose, a: AgentRuntime, t: number, visorBase: THREE.Color) {
   const o = a.offset * 10
@@ -159,16 +159,16 @@ export function animateAgent(p: AgentPose, a: AgentRuntime, t: number, visorBase
     const pulse = s === 'error' || s === 'waiting' ? 0.6 + Math.abs(Math.sin(t * 5)) * 0.6 : 0.85 + Math.sin(t * 3 + o) * 0.15
     p.indicator = 0.07 * pulse
     p.indicatorY = 1.32 + Math.sin(t * 2 + o) * 0.03
-    p.indicatorColor.copy(STATE_COLOR_OBJ[s]).multiplyScalar(1.6)
+    p.indicatorColor.copy(STATE_COLOR_OBJ[s])
   } else p.indicator = 0
 
   p.thought = s === 'thinking' && !walking ? t : 0
   p.task = a.currentTaskId ? t * 2.5 + 0.0001 : 0
   p.taskY = 1.55 + Math.sin(t * 3 + o) * 0.04
 
-  if (s === 'error') p.visor.copy(Math.sin(t * 12) > 0 ? RED : visorBase).multiplyScalar(Math.sin(t * 12) > 0 ? 2.2 : 0.4)
-  else p.visor.copy(visorBase).multiplyScalar(s === 'working' || s === 'researching' ? 1.9 + Math.sin(t * 8 + o) * 0.25 : 1.5)
+  if (s === 'error') p.visor.copy(Math.sin(t * 12) > 0 ? RED : visorBase).multiplyScalar(Math.sin(t * 12) > 0 ? 1.2 : 0.4)
+  else p.visor.copy(visorBase).multiplyScalar(s === 'working' || s === 'researching' ? 1.05 + Math.sin(t * 8 + o) * 0.1 : 0.9)
 
   p.burst = a.flash
-  p.burstColor.copy(s === 'error' ? RED : LIME).multiplyScalar(a.flash * 1.6)
+  p.burstColor.copy(s === 'error' ? RED : LIME).multiplyScalar(a.flash * 0.9)
 }

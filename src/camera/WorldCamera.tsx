@@ -19,7 +19,7 @@ export const CAMERA_DISTANCE = 90
  * island. Never an FPS camera.
  */
 export function WorldCamera() {
-  const { runtime } = useRuntime()
+  const { runtime, labelLayer } = useRuntime()
   // Callback-ref state: drei recreates the controls when the default camera changes.
   const [c, setControls] = useState<CameraControlsImpl | null>(null)
   const size = useThree((s) => s.size)
@@ -29,7 +29,7 @@ export function WorldCamera() {
   const lastInput = useRef(0)
   const half = runtime.layout.half
 
-  const fitZoom = () => Math.max(6, Math.min(size.width / (half * 2 * (size.width < 760 ? 1.32 : 1.45)), size.height / (half * 2 * 0.98)))
+  const fitZoom = () => Math.max(6, Math.min(size.width / (half * 2 * (size.width < 760 ? 1.32 : 1.45)), size.height / (half * 2 * 1.12)))
 
   // Intro: start wide and slightly rotated, glide into the iso composition.
   useEffect(() => {
@@ -63,6 +63,17 @@ export function WorldCamera() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [c, half])
+
+  // Re-frame the island when the viewport changes (window resize, side panel shown/hidden),
+  // unless the user is looking at something specific.
+  const lastSize = useRef(`${size.width}x${size.height}`)
+  useEffect(() => {
+    const key = `${size.width}x${size.height}`
+    if (!c || key === lastSize.current) return
+    lastSize.current = key
+    if (!selection && !follow.current) c.zoomTo(fitZoom(), true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [c, size.width, size.height])
 
   // Keep the focused object clear of the desktop side panel.
   useEffect(() => {
@@ -98,6 +109,13 @@ export function WorldCamera() {
 
   useFrame(({ clock }, dt) => {
     if (!c) return
+    // Card / tag density follows zoom, so the overview never turns into a wall of labels.
+    const layer = labelLayer.current
+    if (layer) {
+      const z = c.camera.zoom
+      const density = size.width < 700 && z < 40 ? 'tiny' : z < 30 ? 'far' : z < 44 ? 'mid' : 'near'
+      if (layer.dataset.density !== density) layer.dataset.density = density
+    }
     if (follow.current) {
       const a = runtime.agents.get(follow.current)
       if (a) c.moveTo(a.pos.x, 0.6, a.pos.z, true)

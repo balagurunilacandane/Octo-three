@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { MODEL_OPTIONS } from '../domain/catalog'
 import { useWorld, type Tab } from '../state/worldStore'
 
 const TABS: { key: Tab; label: string }[] = [
@@ -13,34 +14,76 @@ const TABS: { key: Tab; label: string }[] = [
   { key: 'settings', label: 'Settings' },
 ]
 
+const PROVIDER_GLYPH: Record<string, string> = { Claude: '✳', GPT: '◎', Gemini: '✦', Ollama: '🦙' }
+
 export function TopBar() {
   const view = useWorld((s) => s.view)
   const tab = useWorld((s) => s.tab)
   const setTab = useWorld((s) => s.setTab)
   const setView = useWorld((s) => s.setView)
+  const setTaskFilter = useWorld((s) => s.setTaskFilter)
   const advanced = useWorld((s) => s.advanced)
   const setAdvanced = useWorld((s) => s.setAdvanced)
-  const current = useWorld((s) => (s.currentWorldId ? s.bundles[s.currentWorldId]?.world : undefined))
-  const waiting = useWorld((s) => (s.currentWorldId ? (s.bundles[s.currentWorldId]?.tasks.filter((t) => t.status === 'waiting').length ?? 0) : 0))
+  const bundle = useWorld((s) => (s.currentWorldId ? s.bundles[s.currentWorldId] : undefined))
+  const waiting = bundle?.tasks.filter((t) => t.status === 'waiting').length ?? 0
+  const inWorld = view === 'world' && !!bundle
+  const tools = bundle ? Object.values(bundle.tools) : []
+  const providers = bundle ? [...new Set(Object.values(bundle.agents).map((a) => MODEL_OPTIONS.find((m) => m.id === a.config.model)?.provider ?? 'Claude'))] : []
 
   return (
     <header className="topbar">
       <button className="brand" onClick={() => setView('home')} title="My Worlds">
-        <span className="brand-mark" />
-        <span className="brand-text">AI WORLDS</span>
+        <span className="brand-text serif">AI Worlds</span>
+        <span className="brand-ver">v1</span>
       </button>
       {view !== 'wizard' && <WorldSwitcher />}
-      {view === 'world' && current && (
+      {inWorld && (
         <nav className="tabs" aria-label="World sections">
           {TABS.map((t) => (
             <button key={t.key} className={`tab${tab === t.key ? ' active' : ''}`} onClick={() => setTab(t.key)}>
               {t.label}
-              {t.key === 'tasks' && waiting > 0 && <span className="tab-badge">{waiting}</span>}
             </button>
           ))}
         </nav>
       )}
       <div className="topbar-right">
+        {inWorld && tools.length > 0 && (
+          <div className="tb-group hide-xl" title="Tools this World is connected to">
+            <span className="tb-label">
+              <span className="live" /> <span className="tb-label-text">Connected to</span>
+            </span>
+            {tools.slice(0, 8).map((t) => (
+              <span key={t.id} className="tb-tile" title={t.name}>
+                {t.icon}
+              </span>
+            ))}
+          </div>
+        )}
+        {inWorld && providers.length > 0 && (
+          <div className="tb-group hide-lg" title="Models your agents run on">
+            <span className="tb-label">
+              <span className="live" /> <span className="tb-label-text">Runs headless on</span>
+            </span>
+            {providers.map((p) => (
+              <span key={p} className="tb-tile" title={p}>
+                {PROVIDER_GLYPH[p] ?? '◇'}
+              </span>
+            ))}
+          </div>
+        )}
+        {inWorld && (
+          <button
+            className={`tb-warn${waiting ? ' on' : ''}`}
+            title="Tasks waiting for your approval"
+            onClick={() => {
+              setTab('world')
+              setTaskFilter('waiting')
+            }}
+          >
+            ⚠ {waiting}
+          </button>
+        )}
+        <Clock />
         <label className="switch" title="Advanced mode exposes models, tools, MCP servers, runtime and logs">
           <input type="checkbox" checked={advanced} onChange={(e) => setAdvanced(e.target.checked)} />
           <span className="switch-track" />
@@ -48,6 +91,21 @@ export function TopBar() {
         </label>
       </div>
     </header>
+  )
+}
+
+function Clock() {
+  const [now, setNow] = useState(() => new Date())
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 1000)
+    return () => clearInterval(id)
+  }, [])
+  const h = now.getHours()
+  const txt = `${String(h % 12 || 12).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`
+  return (
+    <span className="clock serif hide-sm">
+      {txt} <span className="clock-ampm">{h < 12 ? 'am' : 'pm'}</span>
+    </span>
   )
 }
 
@@ -109,7 +167,7 @@ function WorldSwitcher() {
               setOpen(false)
             }}
           >
-            ＋ Create New World
+            + Create New World
           </button>
         </div>
       )}

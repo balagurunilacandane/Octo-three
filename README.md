@@ -1,6 +1,8 @@
 # AI Worlds
 
-**A visual operating system for AI-powered organisations.** Describe what you are building, AI Worlds proposes an organisation (teams + agents), and the 3D world is *generated from that organisation*: a floating isometric island where every team gets its own department building, agents walk, work, think and collaborate, tasks move data through a central **Brain**, and the knowledge graph grows as work completes.
+**A visual operating system for AI-powered organisations.** Describe what you are building, AI Worlds proposes an organisation (teams + agents), and the 3D world is *generated from that organisation*: a dark isometric office where every team gets its own department floor with a floating stat card, agents walk, work, think and collaborate, tasks move data through a central **Brain**, and the knowledge graph grows as work completes.
+
+The World view is laid out like an operations console: the 3D office on the left (department cards with agent counts, two team metrics and Doing / Next / Done, a "waiting approval" button when a human decision is needed, role tags over desks, dashed data lines to the Brain and out to connected tools), and a **Task status** panel on the right (type a task for any team, filter All / Backlog / In progress / Waiting / Done, approve or reject inline). The top bar shows the World, the tools it is *connected to*, the models agents *run headless on*, pending approvals and a clock. The palette is deliberately quiet — charcoal surfaces, muted team tints, serif numerals — so state changes (a selected card, an amber approval) stand out. A **Campus** scene style (Settings) swaps the desks-and-cards floors for a distinct building per team.
 
 Built with React 19, TypeScript, React Three Fiber, Three.js, Drei, Rapier and Zustand.
 
@@ -23,14 +25,16 @@ Useful URL flags: `?quality=low|medium|high` (force a render tier), `?timescale=
 | Create-World wizard: describe in plain language or pick a template → goal → suggested teams → suggested agents → optional tools → review | ✅ |
 | Dynamic world generation: layout, buildings, desks, nav grid, colliders and data paths are all generated from the organisation | ✅ |
 | 10 building types (research lab, war room, data centre, design studio, control centre, prototype lab, broadcast tower, media studio, code tower, generic hub) with custom teams mapped by keywords | ✅ |
-| Central Brain: multi-layer platform, glass core, rotating rings, orbiting nodes, pulses, live knowledge graph (nodes cluster by department, new nodes flash, sparks travel edges) | ✅ |
+| Central Brain: dark plate with a floating point-cloud network, pulses, live knowledge graph (nodes cluster by department, new nodes flash, sparks travel edges) and a notes counter | ✅ |
 | Agents: articulated robot rig with 9 animated states, randomised offsets, accessories / visor / accent identity | ✅ |
 | Movement: grid A* with line-of-sight smoothing + Rapier kinematic character controller (agents slide along buildings/desks, never teleport) | ✅ |
 | Task flow: task → agent stands → walks to station → researches → knowledge node → packet to Brain → processing → packet to target team → target agent works → optional human approval → result returns → celebration → agents return to desks | ✅ |
 | Data packets along `CatmullRomCurve3` arcs with glow, pulse and trail; colour by data type | ✅ |
-| Department activity (`activeTasks / maxTasks`) drives screen shader speed, emissive glow, beacons, path particle density & speed | ✅ |
-| Natural-language command bar ("Research the top 20 competitors and prepare a comparison") routed to teams | ✅ |
-| Human-in-the-loop: plain-language policies ("…but ask me before publishing") → permission rules → approval tray | ✅ |
+| Department activity (`activeTasks / maxTasks`) drives screen shader speed, desk glow, dashed-line flow speed and dot density | ✅ |
+| Department stat cards (agents, 2 team metrics, Doing/Next/Done, inline approvals) that adapt to zoom and stay inside the view | ✅ |
+| Task status panel + real backlog: autonomous work queues until agents are free | ✅ |
+| Natural-language tasks ("Research the top 20 competitors and prepare a comparison") — auto-routed, or typed for a specific team | ✅ |
+| Human-in-the-loop: plain-language policies ("…but ask me before publishing") → permission rules → approvals on cards, in the panel and the top bar | ✅ |
 | Hover tooltips (agent / department / Brain), click-to-focus with smooth camera, side info panels | ✅ |
 | Strategy-game camera: ortho iso, pan, zoom-to-cursor, bounded rotation, pinch/touch, cinematic intro + focus + agent follow, idle drift | ✅ |
 | Simple vs Advanced mode (model, instructions, tools, MCP servers, memory, temperature, max tokens, timeout, tool endpoints, event source, export) | ✅ |
@@ -47,7 +51,7 @@ Useful URL flags: `?quality=low|medium|high` (force a render tier), `?timescale=
 src/
 ├── app/            App shell, Home (My Worlds), CreateWorldWizard, WorldView
 ├── pages/          Overview, Teams, Agents, Tasks, Knowledge, Tools, Activity, Settings
-├── components/     TopBar/World switcher, CommandBar, InfoPanel, HoverTooltip, ApprovalsTray, labels…
+├── components/     TopBar/World switcher, TaskPanel, DepartmentCard, InfoPanel, HoverTooltip, CameraButtons…
 ├── domain/         types, catalog (team archetypes, templates, tools, models), planner, factory
 ├── state/          worldStore.ts — Zustand, one isolated WorldBundle per World (persisted)
 ├── events/         WorldEvent protocol, EventBus, WebSocket/SSE client
@@ -86,7 +90,7 @@ useFrame loop  →  instanced agents, packets, graph, shaders, materials
 * Shared geometries/materials, pooled packets (one instanced draw for all packets + trails), one screen shader material per department.
 * Quality tiers adjust DPR, shadows, post-processing (bloom, tilt-shift DOF, neutral tone mapping, vignette), particle density, point lights and max visible agents per team.
 
-On the default 7-team world the low tier renders in ~570 draw calls (it was ~1,570 before instancing and batching).
+Department counters on the cards start at 0 and only grow as simulated work completes — no numbers are invented.
 
 ---
 

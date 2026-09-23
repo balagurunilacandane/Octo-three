@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { hash01 } from '../domain/ids'
 import { useWorld } from '../state/worldStore'
-import { G } from './materials'
+import { G, mutedAccent } from './materials'
 import { useRuntime } from './RuntimeContext'
 
 const MAX_NODES = 200
@@ -33,7 +33,7 @@ export function KnowledgeGraph({ radius = 1.0 }: { radius?: number }) {
     return g
   }, [])
   const lineMat = useMemo(
-    () => new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }),
+    () => new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }),
     [],
   )
 
@@ -52,7 +52,7 @@ export function KnowledgeGraph({ radius = 1.0 }: { radius?: number }) {
       if (p.lengthSq() < 0.01) p.set(0.2, 0.1, 0)
       p.setLength(radius * (0.35 + 0.6 * hash01(n.id, 4)))
       base.push(p)
-      colors.push(new THREE.Color(plot?.color ?? '#a5f3fc'))
+      colors.push(new THREE.Color(mutedAccent(plot?.color ?? '#9fd8cf')).lerp(white, 0.35))
     })
     const e = (edges ?? [])
       .map((ed) => [index.get(ed.source), index.get(ed.target), ed.strength] as const)
@@ -89,7 +89,7 @@ export function KnowledgeGraph({ radius = 1.0 }: { radius?: number }) {
       dummy.scale.setScalar((0.035 + n.importance * 0.05) * pulse * (1 + fresh * 1.6))
       dummy.updateMatrix()
       mesh.setMatrixAt(i, dummy.matrix)
-      tmpC.copy(layout.colors[i]).lerp(white, fresh * 0.8).multiplyScalar(1.6 + fresh * 2 + boost)
+      tmpC.copy(layout.colors[i]).lerp(white, fresh * 0.8).multiplyScalar(1 + fresh * 0.8 + boost * 0.3)
       mesh.setColorAt(i, tmpC)
     })
     mesh.instanceMatrix.needsUpdate = true
@@ -109,7 +109,7 @@ export function KnowledgeGraph({ radius = 1.0 }: { radius?: number }) {
     })
     pos.needsUpdate = true
     col.needsUpdate = true
-    lineMat.opacity = 0.45 + Math.sin(t * 1.5) * 0.15 + boost * 0.3
+    lineMat.opacity = 0.28 + Math.sin(t * 1.5) * 0.08 + boost * 0.2
 
     // energy sparks travelling across edges
     const sm = sparkMesh.current
@@ -142,7 +142,7 @@ export function KnowledgeGraph({ radius = 1.0 }: { radius?: number }) {
       </instancedMesh>
       <lineSegments geometry={lineGeom} material={lineMat} frustumCulled={false} />
       <instancedMesh ref={sparkMesh} args={[G.sphereLo, undefined, SPARKS]} frustumCulled={false}>
-        <meshBasicMaterial color="#e0f2fe" toneMapped={false} />
+        <meshBasicMaterial color="#f2f5f5" />
       </instancedMesh>
     </group>
   )

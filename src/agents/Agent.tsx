@@ -5,7 +5,7 @@ import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
 import type { AccessoryType, Agent as AgentModel } from '../domain/types'
 import { useWorld } from '../state/worldStore'
-import { G, PALETTE } from '../world/materials'
+import { G, PALETTE, mutedAccent } from '../world/materials'
 import { useRuntime } from '../world/RuntimeContext'
 import { animateAgent, createPose, type AgentPose } from './AgentAnimator'
 import { AGENT_CAPSULE, AGENT_GROUPS, makeAgentBody, type useCharacterController } from './AgentPhysics'
@@ -51,8 +51,8 @@ function shadowTexture() {
 
 function buildParts(): PartDef[] {
   const white = () => new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.45, metalness: 0.1 })
-  const shell = new THREE.MeshStandardMaterial({ color: PALETTE.white, roughness: 0.35, metalness: 0.1 })
-  const joint = new THREE.MeshStandardMaterial({ color: '#cbd5e1', roughness: 0.5, metalness: 0.2 })
+  const shell = new THREE.MeshStandardMaterial({ color: '#56565c', roughness: 0.5, metalness: 0.15 })
+  const joint = new THREE.MeshStandardMaterial({ color: '#3b3b40', roughness: 0.6, metalness: 0.2 })
   const head = new THREE.MeshStandardMaterial({ color: PALETTE.head, roughness: 0.3, metalness: 0.35 })
   const dark = new THREE.MeshStandardMaterial({ color: PALETTE.dark, roughness: 0.55, metalness: 0.15 })
   const glow = () => new THREE.MeshBasicMaterial({ color: '#ffffff', toneMapped: false })
@@ -92,9 +92,9 @@ function buildParts(): PartDef[] {
     { bone: 'head', geometry: G.cyl, material: accentMat, color: 'accent', pos: [0, 0.13, 0.17], scale: [0.16, 0.02, 0.14], accessory: 'cap' },
     // status
     { bone: 'root', geometry: G.sphereLo, material: glow(), color: 'indicator', pos: [0, 0, 0], scale: [1, 1, 1], special: 'indicator' },
-    { bone: 'root', geometry: G.octa, material: new THREE.MeshBasicMaterial({ color: new THREE.Color('#fde047').multiplyScalar(2.2), toneMapped: false }), color: 'fixed', pos: [0, 0, 0], scale: [0.07, 0.1, 0.07], special: 'task' },
+    { bone: 'root', geometry: G.octa, material: new THREE.MeshBasicMaterial({ color: new THREE.Color('#d9c27a'), toneMapped: false }), color: 'fixed', pos: [0, 0, 0], scale: [0.07, 0.1, 0.07], special: 'task' },
     ...([0, 1, 2] as const).map(
-      (i): PartDef => ({ bone: 'root', geometry: G.sphereLo, material: new THREE.MeshBasicMaterial({ color: new THREE.Color('#e9d5ff').multiplyScalar(1.6), toneMapped: false }), color: 'fixed', pos: [0, 0, 0], scale: [1, 1, 1], special: `thought${i}` }),
+      (i): PartDef => ({ bone: 'root', geometry: G.sphereLo, material: new THREE.MeshBasicMaterial({ color: new THREE.Color('#cfc8e0'), toneMapped: false }), color: 'fixed', pos: [0, 0, 0], scale: [1, 1, 1], special: `thought${i}` }),
     ),
   ]
 }
@@ -137,9 +137,9 @@ function AgentInstancesImpl({ agents }: { agents: AgentModel[] }) {
     () =>
       agents.map((a) => ({
         id: a.id,
-        accent: new THREE.Color(a.appearance.accent),
-        accentGlow: new THREE.Color(a.appearance.accent).multiplyScalar(2),
-        visor: new THREE.Color(a.appearance.visor),
+        accent: new THREE.Color(mutedAccent(a.appearance.accent)),
+        accentGlow: new THREE.Color(mutedAccent(a.appearance.accent)).multiplyScalar(1.1),
+        visor: new THREE.Color(mutedAccent(a.appearance.visor)).lerp(new THREE.Color('#ffffff'), 0.3),
         accessory: a.appearance.accessory,
         pose: createPose(),
       })),

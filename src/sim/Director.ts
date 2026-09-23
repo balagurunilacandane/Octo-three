@@ -26,10 +26,19 @@ const RESULT_TEMPLATES = [
   (t: string, team: string) => `“${t}” complete. ${team} highlighted 2 risks and 4 opportunities.`,
 ]
 
+interface Queued {
+  options: FlowOptions
+  task: Task
+}
+
+const MAX_BACKLOG = 18
+
 export class Director {
   private abort = new AbortController()
   private running = 0
   private started = false
+  /** Autonomous work waits here (status: backlog) until an agent is free. */
+  private queue: Queued[] = []
 
   constructor(
     private rt: WorldRuntime,
@@ -70,6 +79,46 @@ export class Director {
     this.started = true
     this.guard(this.ambientLoop())
     this.guard(this.autonomyLoop())
+    this.guard(this.pumpLoop())
+  }
+
+  private maxConcurrent() {
+    return Math.max(2, Math.ceil(this.teams().length / 3) + 1)
+  }
+
+  private makeTask(o: FlowOptions): Task {
+    const bundle = this.getBundle()!
+    return {
+      id: uid('task'),
+      worldId: bundle.world.id,
+      title: o.title,
+      sourceDepartment: o.source,
+      targetDepartment: o.target,
+      assignedAgent: '',
+      status: 'backlog',
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      request: o.request,
+      approval: o.approval,
+    }
+  }
+
+  /** Put autonomous work in the backlog; it starts when capacity frees up. */
+  private enqueue(o: FlowOptions) {
+    if (!this.getBundle() || this.queue.length >= MAX_BACKLOG) return
+    const task = this.makeTask(o)
+    this.emit({ event: 'task.created', task })
+    this.queue.push({ options: o, task })
+  }
+
+  private async pumpLoop() {
+    for (;;) {
+      await this.wait(0.5)
+      while (this.queue.length && this.running < this.maxConcurrent()) {
+        const next = this.queue.shift()!
+        this.guard(this.flow(next.options, next.task))
+      }
+    }
   }
 
   stop() {
@@ -155,17 +204,22 @@ export class Director {
       const source = find(['research']) ?? teams[0]
       const target = find(['marketing', 'content', 'product']) ?? teams[teams.length - 1]
       this.guard(this.flow({ source, target, title: this.taskTitle(source) }))
+      // a little backlog so the office has something queued from the start
+      for (let i = 0; i < Math.min(4, teams.length); i++) {
+        const s = teams[(i * 3 + 1) % teams.length]
+        this.enqueue({ source: s, target: teams[(i * 5 + 2) % teams.length], title: this.taskTitle(s) })
+      }
     }
     for (;;) {
       const autonomy = this.getBundle()?.runtime.autonomy ?? 0.6
-      await this.wait(4 + (1 - autonomy) * 14 + Math.random() * 4)
+      await this.wait(3 + (1 - autonomy) * 12 + Math.random() * 3)
       if (autonomy <= 0.01) continue
       const ids = this.teams()
-      if (ids.length === 0 || this.running >= Math.max(2, Math.ceil(ids.length / 2) + 1)) continue
+      if (ids.length === 0) continue
       const source = ids[Math.floor(Math.random() * ids.length)]
       const others = ids.filter((t) => t !== source)
       const target = others.length && Math.random() < 0.8 ? others[Math.floor(Math.random() * others.length)] : source
-      this.guard(this.flow({ source, target, title: this.taskTitle(source) }))
+      this.enqueue({ source, target, title: this.taskTitle(source) })
     }
   }
 
@@ -207,28 +261,18 @@ export class Director {
    * data to Brain → Brain processes → insight to target team → target agent works →
    * (approval) → result returns to source → completion → agents return to desks.
    */
-  async flow(o: FlowOptions) {
+  async flow(o: FlowOptions, queued?: Task) {
     const bundle = this.getBundle()
     if (!bundle || !bundle.teams[o.source] || !bundle.teams[o.target]) return
     this.running++
-    const task: Task = {
-      id: uid('task'),
-      worldId: bundle.world.id,
-      title: o.title,
-      sourceDepartment: o.source,
-      targetDepartment: o.target,
-      assignedAgent: '',
-      status: 'backlog',
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      request: o.request,
-      approval: o.approval,
-    }
+    const task = queued ?? this.makeTask(o)
     let a: AgentRuntime | null = null
     let b: AgentRuntime | null = null
     try {
-      this.emit({ event: 'task.created', task })
-      await this.wait(0.8)
+      if (!queued) {
+        this.emit({ event: 'task.created', task })
+        await this.wait(0.8)
+      }
       a = await this.claimAgent(o.source)
       if (!a) {
         this.emit({ event: 'task.failed', taskId: task.id, error: 'No agent was available' })

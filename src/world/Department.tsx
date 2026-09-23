@@ -3,30 +3,30 @@ import { useFrame, type ThreeEvent } from '@react-three/fiber'
 import { memo, useMemo, useRef, type RefObject } from 'react'
 import * as THREE from 'three'
 import { useWorld } from '../state/worldStore'
-import { DepartmentLabel } from '../components/DepartmentLabel'
+import { DepartmentCard, RoleTag } from '../components/DepartmentCard'
 import { Building } from './Building'
 import type { PlotLayout } from './layout'
-import { G, PALETTE, neon, plant, std } from './materials'
+import { G, PALETTE, mutedAccent, mutedSurface, neon, plant, std } from './materials'
 import { useRuntime } from './RuntimeContext'
 import { DYNAMIC, StaticBatch } from './StaticBatch'
 
-const PLANT_COLORS = ['#34d399', '#4ade80', '#2dd4bf']
+const PLANT_COLORS = ['#2f5a45', '#35604a', '#2b5249']
 
 function Desk({ screen, accent }: { screen: THREE.Material; accent: THREE.Material }) {
   return (
     <group>
       {/* desk */}
       <mesh geometry={G.box} scale={[1.05, 0.06, 0.62]} position={[0, 0.72, 0]} material={std(PALETTE.desk)} castShadow receiveShadow />
-      <mesh geometry={G.box} scale={[0.05, 0.7, 0.55]} position={[-0.47, 0.36, 0]} material={std('#c4b5fd')} castShadow />
-      <mesh geometry={G.box} scale={[0.05, 0.7, 0.55]} position={[0.47, 0.36, 0]} material={std('#c4b5fd')} castShadow />
+      <mesh geometry={G.box} scale={[0.05, 0.7, 0.55]} position={[-0.47, 0.36, 0]} material={std(PALETTE.deskLeg)} castShadow />
+      <mesh geometry={G.box} scale={[0.05, 0.7, 0.55]} position={[0.47, 0.36, 0]} material={std(PALETTE.deskLeg)} castShadow />
       <mesh geometry={G.box} scale={[1.06, 0.03, 0.03]} position={[0, 0.74, 0.3]} material={accent} />
       {/* monitor */}
       <mesh geometry={G.box} scale={[0.06, 0.2, 0.06]} position={[0, 0.85, -0.16]} material={std(PALETTE.dark)} />
       <mesh geometry={G.box} scale={[0.62, 0.4, 0.04]} position={[0, 1.1, -0.18]} material={std(PALETTE.dark, 0.4, 0.3)} castShadow />
       <mesh geometry={G.plane} scale={[0.56, 0.34, 1]} position={[0, 1.1, -0.157]} material={screen} />
       {/* keyboard + mug */}
-      <mesh geometry={G.box} scale={[0.36, 0.02, 0.12]} position={[0, 0.76, 0.08]} material={std('#e2e8f0')} />
-      <mesh geometry={G.cylLo} scale={[0.04, 0.08, 0.04]} position={[0.38, 0.79, 0.05]} material={std('#fb7185')} />
+      <mesh geometry={G.box} scale={[0.36, 0.02, 0.12]} position={[0, 0.76, 0.08]} material={std('#8f8d88')} />
+      <mesh geometry={G.cylLo} scale={[0.04, 0.08, 0.04]} position={[0.38, 0.79, 0.05]} material={std('#b8b3aa')} />
       {/* chair */}
       <group position={[0, 0, 0.62]}>
         <mesh geometry={G.cylLo} scale={[0.04, 0.4, 0.04]} position={[0, 0.2, 0]} material={std(PALETTE.metal)} />
@@ -74,7 +74,7 @@ function Station({ screen, accent }: { screen: THREE.Material; accent: THREE.Mat
   })
   return (
     <group>
-      <RoundedBox args={[0.7, 0.9, 0.45]} radius={0.08} position={[0, 0.45, 0]} material={std('#ede9fe')} castShadow />
+      <RoundedBox args={[0.7, 0.9, 0.45]} radius={0.08} position={[0, 0.45, 0]} material={std('#2e2e31')} castShadow />
       <mesh geometry={G.box} scale={[0.72, 0.05, 0.47]} position={[0, 0.9, 0]} material={accent} />
       <mesh position={[0, 1.08, 0.12]} rotation={[-0.5, 0, 0]} material={screen}>
         <planeGeometry args={[0.6, 0.36]} />
@@ -116,11 +116,33 @@ function ActivityBeacons({ teamId, color, y }: { teamId: string; color: string; 
   )
 }
 
-function DepartmentImpl({ plot, lights = true }: { plot: PlotLayout; lights?: boolean }) {
+/** Office style: a round meeting table with stools where the building would be. */
+function MeetingTable() {
+  return (
+    <group>
+      <mesh geometry={G.cyl} scale={[0.85, 0.05, 0.85]} position={[0, 0.72, 0]} material={std('#cfccc6', 0.5, 0.05)} castShadow receiveShadow />
+      <mesh geometry={G.cylLo} scale={[0.08, 0.7, 0.08]} position={[0, 0.36, 0]} material={std(PALETTE.deskLeg)} />
+      <mesh geometry={G.cyl} scale={[0.4, 0.03, 0.4]} position={[0, 0.02, 0]} material={std(PALETTE.deskLeg)} />
+      {[0, 1, 2, 3].map((i) => {
+        const a = (i / 4) * Math.PI * 2 + Math.PI / 4
+        return <mesh key={i} geometry={G.cyl} scale={[0.2, 0.42, 0.2]} position={[Math.cos(a) * 1.15, 0.21, Math.sin(a) * 1.15]} material={std(PALETTE.body)} castShadow />
+      })}
+      <mesh geometry={G.box} scale={[0.4, 0.02, 0.3]} position={[0.2, 0.76, 0.1]} rotation={[0, 0.4, 0]} material={std('#e7e5e1')} />
+      <mesh geometry={G.cylLo} scale={[0.05, 0.08, 0.05]} position={[-0.3, 0.8, -0.2]} material={std('#8a8278')} />
+    </group>
+  )
+}
+
+function DepartmentImpl({ plot, lights = true, style = 'office' }: { plot: PlotLayout; lights?: boolean; style?: 'office' | 'campus' }) {
   const { runtime, teamVisuals, labelLayer } = useRuntime()
   const visuals = teamVisuals[plot.teamId]
   const setHover = useWorld((s) => s.setHover)
   const selectDepartment = useWorld((s) => s.selectDepartment)
+  // Role tags: one per desk ("GRAPHICS DESIGNER"); the first agent is the lead.
+  const roles = useWorld((s) => {
+    const b = s.bundles[runtime.worldId]
+    return (b?.teams[plot.teamId]?.agentIds ?? []).map((id) => roleLabel(b?.agents[id]?.name ?? '')).join('|')
+  })
 
   const onOver = (e: ThreeEvent<PointerEvent>) => {
     e.stopPropagation()
@@ -138,7 +160,8 @@ function DepartmentImpl({ plot, lights = true }: { plot: PlotLayout; lights?: bo
   }
 
   const [cx, cz] = plot.center
-  const tint = useMemo(() => '#' + new THREE.Color(PALETTE.plot).lerp(new THREE.Color(plot.color), 0.12).getHexString(), [plot.color])
+  const surface = useMemo(() => mutedSurface(plot.color), [plot.color])
+  const accent = useMemo(() => mutedAccent(plot.color), [plot.color])
   const edge = useMemo(() => {
     const h = plot.size / 2 - 0.12
     const pts = [
@@ -146,23 +169,29 @@ function DepartmentImpl({ plot, lights = true }: { plot: PlotLayout; lights?: bo
     ].map(([x, z]) => new THREE.Vector3(x, 0, z))
     return new THREE.BufferGeometry().setFromPoints(pts)
   }, [plot.size])
+  const portal = labelLayer as RefObject<HTMLElement>
 
   return (
     <group onPointerOver={onOver} onPointerOut={onOut} onClick={onClick}>
       <StaticBatch>
         {/* raised plot */}
         <group position={[cx, 0, cz]}>
-          <RoundedBox args={[plot.size, 0.5, plot.size]} radius={0.2} smoothness={3} position={[0, plot.height - 0.25, 0]} receiveShadow material={std(tint, 0.7, 0.05)} />
+          <RoundedBox args={[plot.size, 0.5, plot.size]} radius={0.12} smoothness={2} position={[0, plot.height - 0.25, 0]} receiveShadow material={std(surface, 0.85, 0.02)} />
           <mesh geometry={G.box} scale={[plot.size + 0.06, 0.1, plot.size + 0.06]} position={[0, plot.height - 0.42, 0]} material={std(PALETTE.plotSide)} />
           <lineLoop geometry={edge} position={[0, plot.height + 0.01, 0]}>
-            <lineBasicMaterial color={plot.color} toneMapped={false} />
+            <lineBasicMaterial color={accent} transparent opacity={0.28} />
           </lineLoop>
         </group>
 
-        {/* building */}
-        <group position={[plot.buildingPos[0], plot.height, plot.buildingPos[1]]} rotation={[0, plot.rot, 0]}>
-          <Building type={plot.building} color={plot.color} visuals={visuals} />
-        </group>
+        {plot.table ? (
+          <group position={[plot.table[0], plot.height, plot.table[1]]}>
+            <MeetingTable />
+          </group>
+        ) : (
+          <group position={[plot.buildingPos[0], plot.height, plot.buildingPos[1]]} rotation={[0, plot.rot, 0]}>
+            <Building type={plot.building} color={plot.color} visuals={visuals} />
+          </group>
+        )}
 
         {/* work area */}
         {plot.desks.map((d, i) => (
@@ -180,15 +209,32 @@ function DepartmentImpl({ plot, lights = true }: { plot: PlotLayout; lights?: bo
           </group>
         ))}
       </StaticBatch>
-      <group position={[plot.buildingPos[0], plot.height, plot.buildingPos[1]]} rotation={[0, plot.rot, 0]}>
-        <ActivityBeacons teamId={plot.teamId} color={plot.color} y={3.7} />
-      </group>
-      {lights && <pointLight position={[plot.center[0] + 1.5, 2.2, plot.center[1] + 1.5]} color={plot.color} intensity={6} distance={9} decay={1.6} />}
-      <Html position={plot.labelPos} center zIndexRange={[30, 10]} portal={labelLayer as RefObject<HTMLElement>} style={{ pointerEvents: 'auto' }}>
-        <DepartmentLabel runtime={runtime} teamId={plot.teamId} name={plot.name} icon={plot.icon} color={plot.color} />
+      {style === 'campus' && (
+        <group position={[plot.buildingPos[0], plot.height, plot.buildingPos[1]]} rotation={[0, plot.rot, 0]}>
+          <ActivityBeacons teamId={plot.teamId} color={plot.color} y={3.7} />
+        </group>
+      )}
+      {lights && style === 'campus' && <pointLight position={[plot.center[0] + 1.5, 2.2, plot.center[1] + 1.5]} color={plot.color} intensity={6} distance={9} decay={1.6} />}
+
+      {roles.split('|').map((r, i) =>
+        r && plot.desks[i] ? (
+          <Html key={i} position={[plot.desks[i].desk[0], i % 2 ? 1.95 : 1.5, plot.desks[i].desk[1]]} center zIndexRange={[20, 5]} portal={portal} className="role-anchor">
+            <RoleTag label={r} lead={i === 0} />
+          </Html>
+        ) : null,
+      )}
+      <Html position={plot.cardPos} zIndexRange={[40, 21]} portal={portal} style={{ pointerEvents: 'auto' }}>
+        <div className={`card-anchor side-${plot.cardSide}`}>
+          <DepartmentCard runtime={runtime} teamId={plot.teamId} />
+        </div>
       </Html>
     </group>
   )
+}
+
+/** "Graphics Designer Agent" → "GRAPHICS DESIGNER" */
+function roleLabel(name: string) {
+  return name.replace(/\s+(agent|ai)(\s+\d+)?$/i, '').replace(/\s+\d+$/, '').toUpperCase()
 }
 
 export const Department = memo(DepartmentImpl)

@@ -1,11 +1,8 @@
 import { lazy, Suspense, useCallback, useState } from 'react'
 import type { ConnectionStatus } from '../events/realtime'
 import { useWorld } from '../state/worldStore'
-import { CommandBar } from '../components/CommandBar'
 import { HoverTooltip } from '../components/HoverTooltip'
-import { InfoPanel } from '../components/InfoPanel'
-import { ApprovalsTray } from '../components/ApprovalsTray'
-import { ActivityTicker } from '../components/ActivityTicker'
+import { TaskPanel } from '../components/TaskPanel'
 import { CameraButtons } from '../components/CameraButtons'
 import { OverviewPage } from '../pages/OverviewPage'
 import { TeamsPage } from '../pages/TeamsPage'
@@ -25,7 +22,7 @@ export function WorldView({ worldId }: { worldId: string }) {
   const inWorld = tab === 'world'
 
   return (
-    <div className="world-view">
+    <div className={`world-view${inWorld ? ' with-panel' : ''}`}>
       <div className={`canvas-wrap${inWorld ? '' : ' dimmed'}`}>
         <Suspense fallback={<div className="loading">Building your world…</div>}>
           <AIWorld worldId={worldId} active onConnection={onConnection} />
@@ -35,11 +32,8 @@ export function WorldView({ worldId }: { worldId: string }) {
       {inWorld ? (
         <>
           <HoverTooltip worldId={worldId} />
-          <InfoPanel worldId={worldId} />
-          <ApprovalsTray worldId={worldId} />
-          <ActivityTicker worldId={worldId} />
           <CameraButtons />
-          <CommandBar worldId={worldId} />
+          <TaskPanel worldId={worldId} />
         </>
       ) : (
         <div className="page-overlay">

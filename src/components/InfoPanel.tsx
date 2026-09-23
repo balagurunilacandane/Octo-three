@@ -3,6 +3,7 @@ import type { WorldBundle } from '../domain/types'
 import { useWorld } from '../state/worldStore'
 import { activityLabel, formatTokens, STATE_LABEL, timeAgo, useAgentLive, useTeamActivity } from '../ui/hooks'
 import { StatusPill } from './StatusPill'
+import { mutedAccent } from '../world/materials'
 
 /** Side panel for the current selection (agent, department or the Brain). */
 export function InfoPanel({ worldId }: { worldId: string }) {
@@ -11,14 +12,14 @@ export function InfoPanel({ worldId }: { worldId: string }) {
   const bundle = useWorld((s) => s.bundles[worldId])
   if (!selection || !bundle) return null
   return (
-    <aside className="info-panel" key={selection.kind + selection.id}>
+    <section className="info-panel" key={selection.kind + selection.id}>
       <button className="close" onClick={() => select(null)} aria-label="Close">
         ×
       </button>
       {selection.kind === 'agent' && <AgentInfo bundle={bundle} id={selection.id} />}
       {selection.kind === 'team' && <TeamInfo bundle={bundle} id={selection.id} />}
       {selection.kind === 'brain' && <BrainInfo bundle={bundle} />}
-    </aside>
+    </section>
   )
 }
 
@@ -34,7 +35,7 @@ function AgentInfo({ bundle, id }: { bundle: WorldBundle; id: string }) {
   const recent = bundle.tasks.filter((t) => t.assignedAgent === id).slice(0, 4)
   return (
     <>
-      <div className="panel-head" style={{ ['--accent' as string]: agent.appearance.accent }}>
+      <div className="panel-head" style={{ ['--accent' as string]: mutedAccent(agent.appearance.accent) }}>
         <div className="avatar" />
         <div>
           <div className="panel-title">{agent.name}</div>
@@ -92,7 +93,7 @@ function TeamInfo({ bundle, id }: { bundle: WorldBundle; id: string }) {
   const active = mine.filter((t) => t.status === 'in_progress' || t.status === 'waiting')
   return (
     <>
-      <div className="panel-head" style={{ ['--accent' as string]: team.color }}>
+      <div className="panel-head" style={{ ['--accent' as string]: mutedAccent(team.color ?? '#999') }}>
         <div className="avatar icon">{team.icon}</div>
         <div>
           <div className="panel-title">{team.name}</div>
@@ -106,7 +107,7 @@ function TeamInfo({ bundle, id }: { bundle: WorldBundle; id: string }) {
         <Stat k="Activity" v={activityLabel(act)} />
       </div>
       <div className="meter">
-        <span style={{ width: `${act * 100}%`, background: team.color }} />
+        <span style={{ width: `${act * 100}%`, background: mutedAccent(team.color ?? '#999') }} />
       </div>
       <div className="section-title">Agents</div>
       {team.agentIds.map((aid) => {
@@ -114,20 +115,12 @@ function TeamInfo({ bundle, id }: { bundle: WorldBundle; id: string }) {
         if (!a) return null
         return (
           <button key={aid} className="agent-row" onClick={() => selectAgent(aid)}>
-            <span className="dot" style={{ background: a.appearance.accent }} />
+            <span className="dot" style={{ background: mutedAccent(a.appearance.accent) }} />
             <span className="grow">{a.name}</span>
             <span className="muted small">{formatTokens(a.tokensUsed)} tok</span>
           </button>
         )
       })}
-      <div className="section-title">Tasks</div>
-      {mine.slice(0, 5).map((t) => (
-        <div key={t.id} className="mini-task">
-          <StatusPill status={t.status} />
-          <span>{t.title}</span>
-        </div>
-      ))}
-      {mine.length === 0 && <div className="muted small">No tasks yet.</div>}
       <button className="btn full" onClick={() => setTab('teams')}>
         Manage team
       </button>
@@ -141,7 +134,7 @@ function BrainInfo({ bundle }: { bundle: WorldBundle }) {
   const recent = bundle.knowledge.slice(-8).reverse()
   return (
     <>
-      <div className="panel-head" style={{ ['--accent' as string]: '#22d3ee' }}>
+      <div className="panel-head" style={{ ['--accent' as string]: '#8fd3c8' }}>
         <div className="avatar icon">🧠</div>
         <div>
           <div className="panel-title">The Brain</div>
@@ -157,10 +150,10 @@ function BrainInfo({ bundle }: { bundle: WorldBundle }) {
         const t = bundle.teams[tid]
         return (
           <div key={tid} className="kb-row">
-            <span className="dot" style={{ background: t?.color ?? '#94a3b8' }} />
+            <span className="dot" style={{ background: mutedAccent(t?.color ?? '#94a3b8') }} />
             <span className="grow">{t?.name ?? 'Removed team'}</span>
             <span className="kb-bar">
-              <span style={{ width: `${Math.min(100, (nodes.length / Math.max(1, bundle.knowledge.length)) * 300)}%`, background: t?.color }} />
+              <span style={{ width: `${Math.min(100, (nodes.length / Math.max(1, bundle.knowledge.length)) * 300)}%`, background: mutedAccent(t?.color ?? '#94a3b8') }} />
             </span>
             <span className="muted small">{nodes.length}</span>
           </div>
@@ -169,7 +162,7 @@ function BrainInfo({ bundle }: { bundle: WorldBundle }) {
       <div className="section-title">Recently learned</div>
       {recent.map((n) => (
         <div key={n.id} className="kb-item">
-          <span className="dot" style={{ background: bundle.teams[n.departmentId]?.color }} />
+          <span className="dot" style={{ background: mutedAccent(bundle.teams[n.departmentId]?.color ?? '#94a3b8') }} />
           <span className="grow">{n.label}</span>
           <span className="muted small">{timeAgo(n.createdAt)}</span>
         </div>

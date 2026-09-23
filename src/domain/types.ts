@@ -36,7 +36,8 @@ export interface World {
   name: string
   description?: string
   icon?: string
-  theme?: string
+  /** 'office' (default: desks + stat cards) or 'campus' (a distinct building per team). */
+  theme?: 'office' | 'campus'
   goal?: string
   teams: ID[]
   agents: ID[]
@@ -170,4 +171,6 @@ export interface WorldBundle {
   tools: Record<ID, Tool>
   permissions: PermissionRule[]
   runtime: RuntimeSettings
+  /** Per-team counters shown on department cards, keyed by team id. They start at 0 and grow as work completes. */
+  metrics?: Record<ID, number[]>
 }

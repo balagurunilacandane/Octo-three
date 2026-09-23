@@ -17,11 +17,13 @@ export interface TeamArchetype {
   tasks: string[]
   knowledge: string[]
   accessory: AccessoryType
+  /** Two counters shown on the department card. */
+  metrics: [string, string]
 }
 
 export const ARCHETYPES: TeamArchetype[] = [
   {
-    key: 'research', label: 'Research', icon: '🔬', color: '#22d3ee', building: 'research', accessory: 'antenna',
+    key: 'research', metrics: ['New insights', 'Sources read'], label: 'Research', icon: '🔬', color: '#22d3ee', building: 'research', accessory: 'antenna',
     keywords: ['research', 'investigat', 'study', 'intelligence', 'competitor', 'insight', 'discovery', 'validation', 'grant', 'market research', 'interview'],
     description: 'Finds facts, sources and insights.',
     agents: [
@@ -33,7 +35,7 @@ export const ARCHETYPES: TeamArchetype[] = [
     knowledge: ['Competitor pricing', 'Market size', 'User pain points', 'Trend signal', 'Source digest'],
   },
   {
-    key: 'strategy', label: 'Strategy', icon: '🎯', color: '#facc15', building: 'strategy', accessory: 'badge',
+    key: 'strategy', metrics: ['Plans drafted', 'Decisions logged'], label: 'Strategy', icon: '🎯', color: '#facc15', building: 'strategy', accessory: 'badge',
     keywords: ['strategy', 'plan', 'vision', 'roadmap', 'goal', 'okr', 'leadership', 'business'],
     description: 'Turns insight into priorities and plans.',
     agents: [
@@ -44,7 +46,7 @@ export const ARCHETYPES: TeamArchetype[] = [
     knowledge: ['Positioning', 'Quarter plan', 'Risk register', 'Priority stack'],
   },
   {
-    key: 'data', label: 'Data', icon: '📊', color: '#3b82f6', building: 'data', accessory: 'headset',
+    key: 'data', metrics: ['Reports sent', 'Dashboards live'], label: 'Data', icon: '📊', color: '#3b82f6', building: 'data', accessory: 'headset',
     keywords: ['data', 'analytics', 'metric', 'finance', 'report', 'dashboard', 'sql', 'insights', 'accounting'],
     description: 'Collects, cleans and analyses data.',
     agents: [
@@ -56,7 +58,7 @@ export const ARCHETYPES: TeamArchetype[] = [
     knowledge: ['Retention curve', 'Revenue forecast', 'Cohort table', 'Anomaly report'],
   },
   {
-    key: 'design', label: 'Design', icon: '🎨', color: '#c084fc', building: 'design', accessory: 'cap',
+    key: 'design', metrics: ['Assets made', 'Reviews passed'], label: 'Design', icon: '🎨', color: '#c084fc', building: 'design', accessory: 'cap',
     keywords: ['design', 'brand', 'creative', 'thumbnail', 'ui', 'ux', 'visual', 'art', 'illustrat'],
     description: 'Creates visuals, brand and interfaces.',
     agents: [
@@ -68,7 +70,7 @@ export const ARCHETYPES: TeamArchetype[] = [
     knowledge: ['Brand palette', 'Design system', 'Visual moodboard', 'UX pattern'],
   },
   {
-    key: 'operations', label: 'Operations', icon: '⚙️', color: '#4ade80', building: 'operations', accessory: 'headset',
+    key: 'operations', metrics: ['Tickets resolved', 'Workflows run'], label: 'Operations', icon: '⚙️', color: '#4ade80', building: 'operations', accessory: 'headset',
     keywords: ['operation', 'ops', 'support', 'customer', 'logistic', 'workflow', 'admin', 'hr', 'legal', 'wedding', 'planning event'],
     description: 'Keeps the organisation running smoothly.',
     agents: [
@@ -80,7 +82,7 @@ export const ARCHETYPES: TeamArchetype[] = [
     knowledge: ['Runbook', 'Ticket themes', 'SLA status', 'Process map'],
   },
   {
-    key: 'product', label: 'Product', icon: '📦', color: '#2dd4bf', building: 'product', accessory: 'badge',
+    key: 'product', metrics: ['Specs written', 'Prototypes built'], label: 'Product', icon: '📦', color: '#2dd4bf', building: 'product', accessory: 'badge',
     keywords: ['product', 'app', 'feature', 'prototype', 'launch', 'e-commerce', 'ecommerce', 'shop', 'store', 'mobile'],
     description: 'Decides what to build and ships it.',
     agents: [
@@ -91,7 +93,7 @@ export const ARCHETYPES: TeamArchetype[] = [
     knowledge: ['Feature spec', 'Release plan', 'Feedback cluster', 'Prototype result'],
   },
   {
-    key: 'marketing', label: 'Marketing', icon: '📣', color: '#fb7185', building: 'marketing', accessory: 'cap',
+    key: 'marketing', metrics: ['Posts drafted', 'New insights'], label: 'Marketing', icon: '📣', color: '#fb7185', building: 'marketing', accessory: 'cap',
     keywords: ['marketing', 'growth', 'seo', 'social', 'campaign', 'ads', 'sales', 'promotion', 'newsletter', 'community', 'pr'],
     description: 'Tells the world and grows the audience.',
     agents: [
@@ -103,7 +105,7 @@ export const ARCHETYPES: TeamArchetype[] = [
     knowledge: ['Campaign brief', 'Keyword map', 'Audience persona', 'Channel mix'],
   },
   {
-    key: 'content', label: 'Content', icon: '✍️', color: '#f472b6', building: 'studio', accessory: 'headset',
+    key: 'content', metrics: ['Scripts written', 'Drafts edited'], label: 'Content', icon: '✍️', color: '#f472b6', building: 'studio', accessory: 'headset',
     keywords: ['content', 'writ', 'script', 'blog', 'copy', 'story', 'course', 'lesson', 'education', 'exam'],
     description: 'Writes scripts, articles and lessons.',
     agents: [
@@ -115,7 +117,7 @@ export const ARCHETYPES: TeamArchetype[] = [
     knowledge: ['Script draft', 'Content calendar', 'Style guide', 'Topic cluster'],
   },
   {
-    key: 'video', label: 'Video', icon: '🎬', color: '#f97316', building: 'studio', accessory: 'headset',
+    key: 'video', metrics: ['Cuts rendered', 'Minutes edited'], label: 'Video', icon: '🎬', color: '#f97316', building: 'studio', accessory: 'headset',
     keywords: ['video', 'youtube', 'film', 'edit', 'audio', 'podcast', 'music', 'media', 'studio'],
     description: 'Produces video and audio.',
     agents: [
@@ -126,7 +128,7 @@ export const ARCHETYPES: TeamArchetype[] = [
     knowledge: ['Edit decision list', 'Audio preset', 'Shorts plan', 'Caption file'],
   },
   {
-    key: 'engineering', label: 'Engineering', icon: '💻', color: '#60a5fa', building: 'engineering', accessory: 'antenna',
+    key: 'engineering', metrics: ['PRs merged', 'Bugs fixed'], label: 'Engineering', icon: '💻', color: '#60a5fa', building: 'engineering', accessory: 'antenna',
     keywords: ['engineer', 'develop', 'code', 'software', 'backend', 'frontend', 'devops', 'api', 'saas', 'platform', 'tech'],
     description: 'Builds and maintains software.',
     agents: [
@@ -140,7 +142,7 @@ export const ARCHETYPES: TeamArchetype[] = [
 ]
 
 export const GENERIC_ARCHETYPE: TeamArchetype = {
-  key: 'generic', label: 'Team', icon: '✨', color: '#a78bfa', building: 'generic', accessory: 'none',
+  key: 'generic', metrics: ['Tasks closed', 'Notes added'], label: 'Team', icon: '✨', color: '#a78bfa', building: 'generic', accessory: 'none',
   keywords: [],
   description: 'A custom team.',
   agents: [{ name: 'Specialist Agent', role: 'Handles the team\'s work' }, { name: 'Assistant Agent', role: 'Supports the specialist' }],

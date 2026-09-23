@@ -46,11 +46,11 @@ export type DataEndpoint = { kind: 'team'; teamId: string } | { kind: 'brain' } 
 export type DataType = 'research' | 'insight' | 'result' | 'message' | 'alert'
 
 export const DATA_COLORS: Record<DataType, string> = {
-  research: '#22d3ee',
-  insight: '#c084fc',
-  result: '#a3e635',
-  message: '#fde047',
-  alert: '#fb923c',
+  research: '#8fd3c8',
+  insight: '#b8aee6',
+  result: '#c6d68a',
+  message: '#e6cf8f',
+  alert: '#e3a08a',
 }
 
 export const STATE_FROM_EVENT: Partial<Record<WorldEvent['event'], AgentState>> = {
